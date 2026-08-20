@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const { spawn } = require("child_process");
+const https = require("https");
 
 const YTDlpWrap =
   require("yt-dlp-wrap").default || require("yt-dlp-wrap");
@@ -72,52 +73,102 @@ function ensure() {
 // =====================================================
 
 async function search(query) {
-  const y = ensure();
+  return new Promise((resolve, reject) => {
+    const encoded =
+      encodeURIComponent(query);
 
-  console.log(`[yt-dlp] YouTube aranıyor: ${query}`);
+    const url =
+      `https://www.youtube.com/results?search_query=${encoded}`;
 
-  const out = await y.execPromise([
-    `ytsearch1:${query}`,
-    "--dump-single-json",
-    "--flat-playlist",
-    "--no-warnings",
-    "--skip-download",
-    "--extractor-args",
-    "youtube:player_client=android"
-  ]);
-
-  const data = JSON.parse(out);
-  const v = data.entries?.[0];
-
-  if (!v) {
-    throw new Error(
-      `YouTube'da sonuç bulunamadı: ${query}`
+    console.log(
+      `[YouTube] Aranıyor: ${query}`
     );
-  }
 
-  const url =
-    v.webpage_url ||
-    v.original_url ||
-    (v.id
-      ? `https://www.youtube.com/watch?v=${v.id}`
-      : null);
+    const request =
+      https.get(
+        url,
+        {
+          headers: {
+            "User-Agent":
+              "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/131.0.0.0 Safari/537.36"
+          }
+        },
+        response => {
+          let body = "";
 
-  if (!url) {
-    throw new Error(
-      `YouTube sonucu için URL alınamadı: ${query}`
+          response.setEncoding(
+            "utf8"
+          );
+
+          response.on(
+            "data",
+            chunk => {
+              body += chunk;
+            }
+          );
+
+          response.on(
+            "end",
+            () => {
+              try {
+                const match =
+                  body.match(
+                    /"videoId":"([^"]+)"/
+                  );
+
+                if (!match) {
+                  return reject(
+                    new Error(
+                      `YouTube'da sonuç bulunamadı: ${query}`
+                    )
+                  );
+                }
+
+                const videoId =
+                  match[1];
+
+                const videoUrl =
+                  `https://www.youtube.com/watch?v=${videoId}`;
+
+                console.log(
+                  `[YouTube] Bulundu: ${videoUrl}`
+                );
+
+                resolve({
+                  title: query,
+                  url: videoUrl,
+                  duration: 0,
+                  thumbnail:
+                    `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`
+                });
+              } catch (error) {
+                reject(error);
+              }
+            }
+          );
+        }
+      );
+
+    request.on(
+      "error",
+      error => {
+        reject(error);
+      }
     );
-  }
 
-  console.log(
-    `[yt-dlp] Bulundu: ${v.title || query}`
-  );
+    request.setTimeout(
+      10000,
+      () => {
+        request.destroy();
 
-  return {
-    title: v.title || query,
-    url,
-    duration: Number(v.duration || 0),
-    thumbnail: v.thumbnail || null
-  };
+        reject(
+          new Error(
+            "YouTube araması zaman aşımına uğradı."
+          )
+        );
+      }
+    );
+  });
 }
 
 
