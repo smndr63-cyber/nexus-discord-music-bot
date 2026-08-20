@@ -72,33 +72,24 @@ function ensure() {
 // =====================================================
 
 async function search(query) {
+  const y = ensure();
 
-  const y =
-    ensure();
+  console.log(`[yt-dlp] YouTube aranıyor: ${query}`);
 
-  console.log(
-    `[yt-dlp] YouTube aranıyor: ${query}`
-  );
+  const out = await y.execPromise([
+    `ytsearch1:${query}`,
+    "--dump-single-json",
+    "--flat-playlist",
+    "--no-warnings",
+    "--skip-download",
+    "--extractor-args",
+    "youtube:player_client=android"
+  ]);
 
-  const out =
-    await y.execPromise([
-      `ytsearch1:${query}`,
-
-      "--dump-single-json",
-      "--flat-playlist",
-
-      "--no-warnings",
-      "--skip-download"
-    ]);
-
-  const data =
-    JSON.parse(out);
-
-  const v =
-    data.entries?.[0];
+  const data = JSON.parse(out);
+  const v = data.entries?.[0];
 
   if (!v) {
-
     throw new Error(
       `YouTube'da sonuç bulunamadı: ${query}`
     );
@@ -107,14 +98,11 @@ async function search(query) {
   const url =
     v.webpage_url ||
     v.original_url ||
-    (
-      v.id
-        ? `https://www.youtube.com/watch?v=${v.id}`
-        : null
-    );
+    (v.id
+      ? `https://www.youtube.com/watch?v=${v.id}`
+      : null);
 
   if (!url) {
-
     throw new Error(
       `YouTube sonucu için URL alınamadı: ${query}`
     );
@@ -125,21 +113,10 @@ async function search(query) {
   );
 
   return {
-
-    title:
-      v.title ||
-      query,
-
+    title: v.title || query,
     url,
-
-    duration:
-      Number(
-        v.duration || 0
-      ),
-
-    thumbnail:
-      v.thumbnail ||
-      null
+    duration: Number(v.duration || 0),
+    thumbnail: v.thumbnail || null
   };
 }
 
