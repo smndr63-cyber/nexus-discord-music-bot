@@ -13,3 +13,6 @@ yarn-error.log*
 Thumbs.db
 
 *.log
+
+# yt-dlp POT provider - ayrı repository
+pot-provider/

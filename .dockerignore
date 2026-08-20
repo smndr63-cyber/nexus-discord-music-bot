@@ -6,3 +6,4 @@ npm-debug.log
 .gitignore
 data/yt-dlp
 data/yt-dlp.exe
+pot-provider/
