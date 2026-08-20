@@ -1,0 +1,22 @@
+{
+  "name": "nexus-discord-music-bot",
+  "version": "1.0.0",
+  "description": "Discord music bot with YouTube search/links and Spotify track/playlist resolution.",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "deploy": "node src/deploy-commands.js"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "@discordjs/voice": "^0.19.0",
+    "discord.js": "^14.24.2",
+    "dotenv": "^17.2.1",
+    "ffmpeg-static": "^5.2.0",
+    "opusscript": "^0.0.8",
+    "spotify-web-api-node": "^5.0.2",
+    "yt-dlp-wrap": "^2.3.12"
+  }
+}
